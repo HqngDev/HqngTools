@@ -1,0 +1,78 @@
+mechanics:
+  drill:
+    # Pattern type: 3X3 or CROSS
+    pattern: "3X3"
+    # Cooldown in milliseconds between tool triggers
+    cooldown-ms: 300
+    # List of blocks the Drill will NOT break
+    blacklist:
+      - DIRT
+      - GRASS_BLOCK
+      - SAND
+      - GRAVEL
+      - BEDROCK
+      - CHEST
+      - BARREL
+      - SHULKER_BOX
+
+  tree_chopper:
+    # Max blocks to break in a single run (to prevent infinite loops or massive memory footprint)
+    max-blocks: 1000
+    # List of blocks the Tree Chopper will NOT break
+    blacklist:
+      - STONE
+      - COBBLESTONE
+      - DIRT
+      - GRASS_BLOCK
+      - BEDROCK
+
+  # Multi-tool will activate Drill when breaking ores/stones and Tree Chopper when breaking logs.
+  # It inherits settings from drill and tree_chopper.
+  multi_tool:
+    # Cooldown in milliseconds
+    cooldown-ms: 300
+
+world-blacklist:
+  - world_spawn
+  - lobby
+
+# Folia & Anti-Lag Performance Settings
+# Since breaking massive amounts of blocks can lag the server, blocks are broken in batches.
+performance:
+  # Number of blocks to break per tick (on the region thread)
+  batch-size: 15
+
+# Drop Management System
+drops:
+  # Disable drops (Drop Suppression) - these blocks will drop absolutely nothing to reduce lag
+  suppress-list:
+    - STONE
+    - DIORITE
+    - GRANITE
+    - ANDESITE
+    - DIRT
+    - COBBLESTONE
+    - DEEPSLATE
+    - COBBLED_DEEPSLATE
+
+  # Custom Drops Overrides: When broken by a custom tool, these blocks drop the specified item instead of their default.
+  # Use Spigot/Paper material names.
+  custom-overrides:
+    IRON_ORE:
+      material: IRON_INGOT
+      amount: 1
+    DEEPSLATE_IRON_ORE:
+      material: IRON_INGOT
+      amount: 1
+    GOLD_ORE:
+      material: GOLD_INGOT
+      amount: 1
+    DEEPSLATE_GOLD_ORE:
+      material: GOLD_INGOT
+      amount: 1
+    COPPER_ORE:
+      material: COPPER_INGOT
+      amount: 1
+    DEEPSLATE_COPPER_ORE:
+      material: COPPER_INGOT
+      amount: 1
