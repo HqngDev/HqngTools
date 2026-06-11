@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.3.10"
     id("com.gradleup.shadow") version "9.4.2"
 }
 
@@ -9,11 +9,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    // Paper 1.21 ships with native Adventure + MiniMessage – no extra runtime dep needed.
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
-    // Source: https://mvnrepository.com/artifact/net.kyori/adventure-platform-bukkit
-    implementation("net.kyori:adventure-platform-bukkit:4.4.1")
 }
 
 kotlin {
@@ -23,6 +21,12 @@ kotlin {
 tasks {
     build {
         dependsOn(shadowJar)
+    }
+
+    shadowJar {
+        // Minimize to only bundle what we actually use (removes unused stdlib classes)
+        minimize()
+        archiveClassifier.set("")
     }
 
     processResources {

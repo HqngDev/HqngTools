@@ -5,11 +5,14 @@ api-version: '1.21'
 folia-supported: true
 authors: [ hqng05 ]
 website: https://qhuyy.tech
+
 commands:
   htools:
     description: HqngTools Admin Command.
     permission: hqngtools.admin
-    usage: /<command> <give/reload>
+    usage: /htools <give|set|reload>
+
 permissions:
   hqngtools.admin:
+    description: Access to all /htools admin sub-commands.
     default: op

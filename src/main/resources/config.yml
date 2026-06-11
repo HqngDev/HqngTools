@@ -1,3 +1,9 @@
+# ==============================================================================
+#                           HqngTools Configuration
+#                              by hqng05 / qhuyy.tech
+# ==============================================================================
+
+# Tool Mechanics Settings
 mechanics:
   drill:
     # Pattern type: 3X3 or CROSS
@@ -16,7 +22,7 @@ mechanics:
       - SHULKER_BOX
 
   tree_chopper:
-    # Max blocks to break in a single run (to prevent infinite loops or massive memory footprint)
+    # Max blocks the Tree Chopper will scan per activation (prevents lag / infinite recursion)
     max-blocks: 1000
     # List of blocks the Tree Chopper will NOT break
     blacklist:
@@ -26,25 +32,25 @@ mechanics:
       - GRASS_BLOCK
       - BEDROCK
 
-  # Multi-tool will activate Drill when breaking ores/stones and Tree Chopper when breaking logs.
-  # It inherits settings from drill and tree_chopper.
+  # Multi-tool switches between Drill (for ores/stone) and Tree Chopper (for logs).
+  # It inherits the drill & tree_chopper settings above.
   multi_tool:
     # Cooldown in milliseconds
     cooldown-ms: 300
 
+# World Blacklist: worlds where custom tools are disabled
 world-blacklist:
   - world_spawn
   - lobby
 
-# Folia & Anti-Lag Performance Settings
-# Since breaking massive amounts of blocks can lag the server, blocks are broken in batches.
+# Folia / Anti-Lag Performance
 performance:
-  # Number of blocks to break per tick (on the region thread)
+  # Blocks to process per tick in the batch scheduler
   batch-size: 15
 
 # Drop Management System
 drops:
-  # Disable drops (Drop Suppression) - these blocks will drop absolutely nothing to reduce lag
+  # Suppress drops entirely (block becomes AIR, drops nothing)
   suppress-list:
     - STONE
     - DIORITE
@@ -55,8 +61,7 @@ drops:
     - DEEPSLATE
     - COBBLED_DEEPSLATE
 
-  # Custom Drops Overrides: When broken by a custom tool, these blocks drop the specified item instead of their default.
-  # Use Spigot/Paper material names.
+  # Custom drop overrides: override what the block drops when broken by a HqngTools tool
   custom-overrides:
     IRON_ORE:
       material: IRON_INGOT
@@ -76,3 +81,55 @@ drops:
     DEEPSLATE_COPPER_ORE:
       material: COPPER_INGOT
       amount: 1
+
+# Item definitions used by /htools give and createTool()
+# name/lore: MiniMessage format
+# enchants: list of "enchant_name:level" (Minecraft namespaced ID without minecraft:)
+# glow: adds enchantment glint even without enchants
+items:
+  drill:
+    name: "<dark_red>ᴅʀɪʟʟ"
+    material: NETHERITE_PICKAXE
+    glow: true
+    enchants:
+      - "efficiency:5"
+      - "unbreaking:3"
+      - "fortune:3"
+    lore:
+      - "<dark_gray>Công cụ khai thác hạng nặng"
+      - ""
+      - "<gray>Tính năng:"
+      - "<red>• Phá hủy khối 3x3 hoặc hình chữ thập"
+      - "<red>• Tự động nung quặng sắt/vàng/đồng"
+      - "<red>• Lọc bỏ đá, đất, cuội để tránh lag"
+
+  tree_chopper:
+    name: "<dark_red>ᴛʀᴇᴇ ᴄʜᴏᴘᴘᴇʀ"
+    material: NETHERITE_AXE
+    glow: true
+    enchants:
+      - "efficiency:5"
+      - "unbreaking:3"
+    lore:
+      - "<dark_gray>Công cụ khai thác lâm nghiệp"
+      - ""
+      - "<gray>Tính năng:"
+      - "<red>• Chặt toàn bộ cây chỉ với 1 lần đập"
+      - "<red>• Tự động thu hoạch gỗ và lá liên quan"
+      - "<red>• Cơ chế phá hủy theo cụm (Batch breaking)"
+
+  multi_tool:
+    name: "<dark_red>ᴍᴜʟᴛɪ-ᴛᴏᴏʟ"
+    material: NETHERITE_PICKAXE
+    glow: true
+    enchants:
+      - "efficiency:6"
+      - "unbreaking:4"
+      - "fortune:4"
+    lore:
+      - "<dark_gray>Siêu công cụ tối thượng"
+      - ""
+      - "<gray>Tính năng:"
+      - "<red>• Đa chức năng: Tự động đổi chế độ"
+      - "<red>• Hoạt động như Drill khi đào quặng/đá"
+      - "<red>• Hoạt động như Tree Chopper khi chặt gỗ"
