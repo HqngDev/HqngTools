@@ -309,25 +309,23 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
                 }
 
                 if (!block.type.isAir) {
-                    // Execute on the correct region thread for this block
-                    Bukkit.getRegionScheduler().execute(plugin, block.location) {
-                        isBreakingInternal.set(true)
-                        try {
-                            // Apply drop override for each extra block too
-                            val mat = block.type
-                            when {
-                                suppressList.contains(mat) ->
-                                    block.setType(Material.AIR)  // no drops at all
-                                customOverrides.containsKey(mat) -> {
-                                    val drop = customOverrides[mat]?.clone()
-                                    block.setType(Material.AIR)
-                                    drop?.let { block.world.dropItemNaturally(block.location, it) }
-                                }
-                                else -> block.breakNaturally(tool)
+                    // Break directly — runAtFixedRate already runs on the
+                    // correct region thread (all tree blocks share one region).
+                    isBreakingInternal.set(true)
+                    try {
+                        val mat = block.type
+                        when {
+                            suppressList.contains(mat) ->
+                                block.setType(Material.AIR)  // no drops at all
+                            customOverrides.containsKey(mat) -> {
+                                val drop = customOverrides[mat]?.clone()
+                                block.setType(Material.AIR)
+                                drop?.let { block.world.dropItemNaturally(block.location, it) }
                             }
-                        } finally {
-                            isBreakingInternal.set(false)
+                            else -> block.breakNaturally(tool)
                         }
+                    } finally {
+                        isBreakingInternal.set(false)
                     }
                 }
             }
