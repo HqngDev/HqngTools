@@ -14,6 +14,7 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.PlayerInventory
 import org.bukkit.persistence.PersistentDataType
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -104,6 +105,10 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
             .persistentDataContainer
             .get(plugin.toolKey, PersistentDataType.STRING) ?: return
 
+        // Sneak bypass: if the player is holding shift, cancel ALL custom mechanics
+        // and let vanilla handle the block break normally (single block, normal drops)
+        if (player.isSneaking) return
+
         // World blacklist check
         if (worldBlacklist.contains(block.world.name.lowercase())) {
             event.isCancelled = true
@@ -112,7 +117,35 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
         }
 
         // Drop management for the PRIMARY block (the one the player actually hit)
-        applyDropOverride(event, block.type)
+        val autoCollect = plugin.config.getBoolean("auto-collect", true)
+        val hasCustomOverride = customOverrides.containsKey(block.type)
+
+        if (hasCustomOverride) {
+            // Custom override: suppress vanilla drops, then auto-collect the override item
+            event.isDropItems = false
+            if (autoCollect) {
+                val drop = customOverrides[block.type]?.clone() ?: return
+                val remaining = giveToInventory(player.inventory, drop)
+                remaining.forEach { item ->
+                    block.world.dropItemNaturally(block.location, item)
+                }
+            } else {
+                val drop = customOverrides[block.type]?.clone() ?: return
+                block.world.dropItemNaturally(block.location, drop)
+            }
+        } else {
+            applyDropOverride(event, block.type)
+
+            // Auto-collect for the primary block: suppress vanilla drops and give items directly
+            if (autoCollect && event.isDropItems) {
+                event.isDropItems = false
+                val drops = block.getDrops(tool, player)
+                val remaining = giveToInventory(player.inventory, drops)
+                remaining.forEach { item ->
+                    block.world.dropItemNaturally(block.location, item)
+                }
+            }
+        }
 
         // Dispatch to the correct tool handler
         when (toolTypeTag) {
@@ -294,8 +327,9 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
     private fun processBlockBreakBatch(player: Player, blocks: List<Block>, tool: ItemStack) {
         if (blocks.isEmpty()) return
 
-        val batchSize      = plugin.config.getInt("performance.batch-size", 15)
-        val queue          = LinkedList(blocks)
+        val autoCollect = plugin.config.getBoolean("auto-collect", true)
+        val batchSize   = plugin.config.getInt("performance.batch-size", 15)
+        val queue       = LinkedList(blocks)
         val anchorLocation: Location = blocks[0].location
 
         // We need a mutable reference inside the lambda for self-cancellation
@@ -309,20 +343,40 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
                 }
 
                 if (!block.type.isAir) {
-                    // Break directly — runAtFixedRate already runs on the
-                    // correct region thread (all tree blocks share one region).
                     isBreakingInternal.set(true)
                     try {
                         val mat = block.type
                         when {
                             suppressList.contains(mat) ->
-                                block.setType(Material.AIR)  // no drops at all
+                                block.type = Material.AIR
                             customOverrides.containsKey(mat) -> {
                                 val drop = customOverrides[mat]?.clone()
-                                block.setType(Material.AIR)
-                                drop?.let { block.world.dropItemNaturally(block.location, it) }
+                                block.type = Material.AIR
+                                if (autoCollect) {
+                                    val remaining = giveToInventory(player.inventory, drop)
+                                    remaining.forEach { item ->
+                                        block.world.dropItemNaturally(block.location, item)
+                                    }
+                                } else {
+                                    drop?.let { block.world.dropItemNaturally(block.location, it) }
+                                }
                             }
-                            else -> block.breakNaturally(tool)
+                            else -> {
+                                if (autoCollect) {
+                                    // Suppress natural drops, break the block, then collect drops ourselves
+                                    val drops = block.getDrops(tool, player)
+                                    block.type = Material.AIR
+                                    val remaining = giveToInventory(player.inventory, drops)
+                                    if (remaining.isNotEmpty()) {
+                                        remaining.forEach { item ->
+                                            block.world.dropItemNaturally(block.location, item)
+                                        }
+                                        player.sendMessage(plugin.messageManager.getMessage(Messages.INVENTORY_FULL))
+                                    }
+                                } else {
+                                    block.breakNaturally(tool)
+                                }
+                            }
                         }
                     } finally {
                         isBreakingInternal.set(false)
@@ -332,5 +386,27 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
 
             if (queue.isEmpty()) task?.cancel()
         }, 1L, 1L)
+    }
+
+    /**
+     * Gives the given [drops] to the [inventory]. Items that don't fit are
+     * returned in a list so the caller can drop them on the ground.
+     */
+    private fun giveToInventory(inventory: PlayerInventory, drops: Collection<ItemStack>): List<ItemStack> {
+        val leftover = mutableListOf<ItemStack>()
+        for (item in drops) {
+            if (item.type.isAir) continue
+            val result = inventory.addItem(item)
+            result.values.forEach { leftover.add(it) }
+        }
+        return leftover
+    }
+
+    /**
+     * Convenience overload that accepts a nullable single [ItemStack].
+     */
+    private fun giveToInventory(inventory: PlayerInventory, item: ItemStack?): List<ItemStack> {
+        if (item == null || item.type.isAir) return emptyList()
+        return giveToInventory(inventory, listOf(item))
     }
 }
