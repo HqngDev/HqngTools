@@ -43,12 +43,19 @@ world-blacklist:
   - world_spawn
   - lobby
 
+# Auto-collect: when true, broken blocks are placed directly into the player's
+# inventory. If the inventory is full, items drop on the ground as usual.
+auto-collect: true
+
 # Folia / Anti-Lag Performance
 performance:
   # Blocks to process per tick in the batch scheduler
   batch-size: 15
 
-# Drop Management System
+# Auto-collect: automatically pick up broken blocks into the player's inventory.
+# If inventory is full, items drop naturally (vanilla behavior).
+# When the player is sneaking (shift), ALL custom mechanics are cancelled
+# and the block breaks normally (vanilla behavior).
 drops:
   # Suppress drops entirely (block becomes AIR, drops nothing)
   suppress-list:
