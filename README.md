@@ -15,8 +15,9 @@
 
 ## Requirements
 
-- Paper 1.21.8 or a compatible fork (Folia supported)
-- Java 21
+- Server Software: Paper, Folia or any compatible fork ( Spigot is not and will NEVER be supported, at least )
+- Server Version: 1.20.x - latest
+- Java Version: at least 21 pls
 
 ## Installation
 
