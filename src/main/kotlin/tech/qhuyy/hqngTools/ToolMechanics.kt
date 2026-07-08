@@ -371,7 +371,6 @@ class ToolMechanics(private val plugin: HqngTools) : Listener {
                                         remaining.forEach { item ->
                                             block.world.dropItemNaturally(block.location, item)
                                         }
-                                        player.sendMessage(plugin.messageManager.getMessage(Messages.INVENTORY_FULL))
                                     }
                                 } else {
                                     block.breakNaturally(tool)
